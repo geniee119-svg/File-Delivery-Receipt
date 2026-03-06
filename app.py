@@ -1,33 +1,50 @@
 import streamlit as st
 import google.generativeai as genai
 from PIL import Image
+import base64
 
 # --- 앱 기본 설정 ---
-st.set_page_config(page_title="MBCNET 파일 인수증")
+st.set_page_config(page_title="MBC NET 파일 인수증", page_icon="📺")
 
-# --- CSS 디자인 커스터마이징 (형광 보라색 적용) ---
-st.markdown("""
-    <style>
-    /* 1. 세련된 한글 웹 폰트(Pretendard - 임시 적용, 추후 원하는 폰트로 변경 예정) */
-    @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+# --- 사내 전용 폰트(MBC NEW L.ttf) 로드 및 CSS 적용 ---
+font_file = "MBC NEW L.ttf"
 
-    /* 2. 앱 전체에 폰트 강제 적용 */
-    html, body, [class*="css"], [class*="st-"], .stMarkdown, .stText, p, h1, h2, h3, h4, h5, h6, input, button {
-        font-family: 'Pretendard', sans-serif !important;
-    }
+try:
+    # 깃허브에 올라간 폰트 파일을 읽어서 Base64 텍스트로 변환
+    with open(font_file, "rb") as f:
+        font_data = f.read()
+        font_b64 = base64.b64encode(font_data).decode("utf-8")
 
-    /* 3. 상단 쨍한 보라색 포인트 띠 */
-    [data-testid="stHeader"] {
-        background-color: transparent;
-        border-top: 8px solid #684CDB;
-    }
-    
-    /* 4. 메인 텍스트 입력창 포커스 시 테두리 색상 강제 지정 */
-    div[data-baseweb="input"] > div {
-        border-color: #684CDB !important;
-    }
-    </style>
-""", unsafe_allow_html=True)
+    # 변환된 폰트 데이터를 앱 전체 디자인(CSS)에 강제 주입
+    st.markdown(f"""
+        <style>
+        @font-face {{
+            font-family: 'MBC_NEW_L';
+            src: url(data:font/ttf;charset=utf-8;base64,{font_b64}) format('truetype');
+        }}
+        
+        /* 앱 전체의 모든 글씨를 사내 폰트로 멱살 잡고 고정 (!important) */
+        html, body, [class*="css"], [class*="st-"], .stMarkdown, .stText, p, h1, h2, h3, h4, h5, h6, input, button {{
+            font-family: 'MBC_NEW_L', sans-serif !important;
+        }}
+
+        /* 상단 쨍한 형광 보라색 포인트 띠 */
+        [data-testid="stHeader"] {{
+            background-color: transparent;
+            border-top: 8px solid #684CDB;
+        }}
+        
+        /* 메인 텍스트 입력창 포커스 시 테두리 색상 강제 지정 */
+        div[data-baseweb="input"] > div {{
+            border-color: #684CDB !important;
+        }}
+        </style>
+    """, unsafe_allow_html=True)
+
+except FileNotFoundError:
+    # 폰트 파일 이름이 틀렸거나 없을 때 띄워줄 에러 메시지
+    st.error(f"⚠️ 사내 폰트 파일을 찾을 수 없습니다: '{font_file}'. 깃허브에 파일이름이 정확히 일치하는지 확인해주세요.")
+
 
 # --- 1. 보안 설정: 비밀번호 확인 ---
 def check_password():
@@ -53,17 +70,17 @@ if check_password():
         st.session_state["custom_codes"] = {}
 
     with st.container(border=True):
-        st.markdown("#### 신규 프로그램 추가")
+        st.markdown("#### ⚙️ 신규 프로그램 추가")
         st.write("기존 코드표에 없는 새 프로그램을 임시로 등록합니다.")
         with st.form("new_program_form", clear_on_submit=True):
             col1, col2 = st.columns(2)
             with col1:
-                new_name = st.text_input("프로그램명 (예: 신농사직설7시즌)")
+                new_name = st.text_input("📝 프로그램명 (예: 신농사직설7시즌)")
             with col2:
-                new_code = st.text_input("영문 코드 (예: NBCCH)")
+                new_code = st.text_input("🔠 영문 코드 (예: NBCCH)")
             
             # 버튼을 보라색(Primary)으로 강제 지정
-            submitted = st.form_submit_button("추가하기", type="primary")
+            submitted = st.form_submit_button("➕ 추가하기", type="primary")
             
             if submitted:
                 if new_name and new_code:
@@ -176,4 +193,3 @@ if check_password():
                     st.session_state["messages"].append({"role": "assistant", "type": "text", "content": "이미지가 확인되지 않았습니다. 파일 첨부 아이콘을 눌러 이미지를 올려주세요."})
             
             st.rerun()
-
