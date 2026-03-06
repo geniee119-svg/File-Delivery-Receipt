@@ -23,10 +23,10 @@ if check_password():
     st.title("📺 방송 편성 파일 인수증 자동 생성기")
     st.write("영상 목록 캡처본(이미지)을 올리면 엑셀용 표 데이터를 추출합니다.")
     
-    # API 키 세팅 
+    # API 키 세팅 (Streamlit Secrets에서 가져옴)
     genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
     
-    # ★ 메뉴판에 있던 최신 프로 모델로 정확히 이름 변경
+    # ★ 최신 2.5 Pro 모델 적용
     model = genai.GenerativeModel('gemini-2.5-pro')
 
     # --- 3. 파일 업로드 기능 ---
@@ -80,4 +80,7 @@ if check_password():
                 try:
                     response = model.generate_content([prompt, image])
                     st.success("✨ 작업이 완료되었습니다! 아래 박스 우측 상단의 '복사' 아이콘을 눌러 엑셀 A1 셀에 붙여넣으세요.")
-                    st.code(response.text, language
+                    st.code(response.text, language="text")
+                    st.balloons() # 성공 시 풍선 애니메이션 효과
+                except Exception as e:
+                    st.error(f"오류가 발생했습니다: {e}")
