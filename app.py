@@ -5,17 +5,26 @@ from PIL import Image
 # --- 앱 기본 설정 ---
 st.set_page_config(page_title="MBC NET 파일 인수증", page_icon="📺")
 
-# --- CSS 디자인 커스터마이징 (최신 버전에 맞게 수정) ---
+# --- CSS 디자인 커스터마이징 (형광 보라색 적용) ---
 st.markdown("""
     <style>
-    /* 상단 보라색 포인트 띠 (스트림릿 최신 태그 적용) */
+    /* 1. 세련된 한글 웹 폰트(Pretendard - 임시 적용, 추후 원하는 폰트로 변경 예정) */
+    @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+
+    /* 2. 앱 전체에 폰트 강제 적용 */
+    html, body, [class*="css"], [class*="st-"], .stMarkdown, .stText, p, h1, h2, h3, h4, h5, h6, input, button {
+        font-family: 'Pretendard', sans-serif !important;
+    }
+
+    /* 3. 상단 쨍한 보라색 포인트 띠 */
     [data-testid="stHeader"] {
         background-color: transparent;
-        border-top: 8px solid #5C3292;
+        border-top: 8px solid #684CDB;
     }
-    /* 메인 텍스트 입력창 포커스 시 테두리 색상 강제 지정 */
+    
+    /* 4. 메인 텍스트 입력창 포커스 시 테두리 색상 강제 지정 */
     div[data-baseweb="input"] > div {
-        border-color: #5C3292 !important;
+        border-color: #684CDB !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -37,7 +46,7 @@ def check_password():
 
 if check_password():
     # --- 2. 메인 타이틀 (사내 포털 컬러 적용) ---
-    st.markdown("<h1 style='color: #5C3292;'>📺 MBC NET 파일 인수증 생성기</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='color: #684CDB; font-weight: 700;'>📺 MBC NET 파일 인수증 생성기</h1>", unsafe_allow_html=True)
     
     # --- 3. 신규 프로그램 개별 입력 폼 ---
     if "custom_codes" not in st.session_state:
@@ -53,7 +62,7 @@ if check_password():
             with col2:
                 new_code = st.text_input("🔠 영문 코드 (예: NBCCH)")
             
-            # ★ 버튼을 보라색(Primary)으로 강제 지정 ★
+            # 버튼을 보라색(Primary)으로 강제 지정
             submitted = st.form_submit_button("➕ 추가하기", type="primary")
             
             if submitted:
