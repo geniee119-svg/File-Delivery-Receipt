@@ -126,14 +126,10 @@ if check_password():
                 st.session_state["custom_codes"] = {}
                 st.rerun()
 
-    # --- 3. 메인 캔버스 (타이틀 삭제 완료) ---
-    # st.markdown(...) 또는 st.title(...) 코드 자체를 삭제했습니다.
-
     # --- 제미나이 API 세팅 ---
     genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
     model = genai.GenerativeModel('gemini-2.5-flash')
 
-    # 프롬프트 동적 생성 함수 (규칙 및 정제 로직은 동일하게 유지)
     def get_prompt():
         custom_section = ""
         if st.session_state["custom_codes"]:
@@ -141,7 +137,6 @@ if check_password():
             for name, code in st.session_state["custom_codes"].items():
                 custom_section += f"- {name}: {code}\n"
                 
-        # [작업 규칙] 및 [기존 프로그램 코드표]는 동일하게 유지
         return f"""
 당신은 방송 편성 데이터 정제 전문가입니다. 
 첨부된 이미지(영상 목록 캡처본)를 분석하여 '파일 인수증' 텍스트를 작성해야 합니다.
@@ -183,20 +178,9 @@ if check_password():
 위 규칙과 코드표를 엄격하게 적용하여 탭으로 구분된 텍스트 결과물만 출력하세요. 다른 부연 설명이나 인사말은 절대 하지 마세요.
 """
 
-    # --- 4. 대화 기록 출력 구역 (이모티콘 완벽 제거) ---
+    # --- 4. 대화 기록 출력 구역 (이모티콘 완벽 제거 및 빈 화면으로 시작) ---
     if "messages" not in st.session_state:
-        # 이모티콘과 메인 타이틀이 제거된 깔끔한 예시 이미지 및 데이터 응답
-        img_msg = {"role": "user", "type": "image", "content": Image.open("image_11.png")}
-        data_msg = {"role": "assistant", "type": "code", "content": """
-NBFKB0039	00:47:07	[본방]시사토론39회
-NBKBH0049	00:47:43	[본방]제주엔49회
-NBTBA0418	00:31:24	[본방]톡톡동해인418회
-NBOBA0682	00:25:27	[본방]어영차바다야682회
-NBDEA0833	00:49:35	[본방]문화콘서트난장833회
-NBNCA0158	00:45:54	[본방]맛나면좋은친구158회
-NBIFA0037	00:46:23	[본방]인생굿샷37회
-"""}
-        st.session_state["messages"] = [img_msg, data_msg]
+        st.session_state["messages"] = []
 
     for msg in st.session_state["messages"]:
         # avatar=None을 추가하여 기본 스트림릿 이모티콘 아바타 숨기기
@@ -210,7 +194,6 @@ NBIFA0037	00:46:23	[본방]인생굿샷37회
                 st.image(msg["content"], caption="업로드된 캡처본", width=400)
 
     # --- 5. 스마트 채팅창 ---
-    # keyboard_double... 등 글자가 아이콘 대신 뜨던 문제를 아이콘 예외 처리를 통해 CSS로 완벽 해결
     prompt_input = st.chat_input(" ", accept_file=True, file_type=["png", "jpg", "jpeg"])
 
     if prompt_input:
@@ -231,7 +214,6 @@ NBIFA0037	00:46:23	[본방]인생굿샷37회
                 with st.spinner('데이터를 분석하고 있습니다...'):
                     try:
                         response = model.generate_content([get_prompt(), img])
-                        # 결과 데이터 응답 (탭 구분 보존)
                         st.session_state["messages"].append({"role": "assistant", "type": "code", "content": response.text})
                     except Exception as e:
                         st.session_state["messages"].append({"role": "assistant", "type": "text", "content": f"오류가 발생했습니다: {e}"})
