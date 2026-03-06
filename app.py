@@ -14,7 +14,6 @@ st.markdown("""
         border-top: 5px solid #5C3292;
     }
     /* 불필요한 스트림릿 기본 메뉴 및 푸터 숨기기 */
-    #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
     /* 버튼 텍스트를 조금 더 굵고 선명하게 */
     .stButton>button {
@@ -169,3 +168,4 @@ if check_password():
             
             st.rerun()
             
+
