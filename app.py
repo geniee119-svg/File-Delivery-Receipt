@@ -4,18 +4,16 @@ from PIL import Image
 import base64
 
 # --- 앱 기본 설정 ---
-st.set_page_config(page_title="MBCNET 파일 인수증")
+st.set_page_config(page_title="MBC NET 파일 인수증", page_icon="📺", layout="centered")
 
 # --- 사내 전용 폰트(MBC NEW L.ttf) 로드 및 CSS 적용 ---
 font_file = "MBC NEW L.ttf"
 
 try:
-    # 깃허브에 올라간 폰트 파일을 읽어서 Base64 텍스트로 변환
     with open(font_file, "rb") as f:
         font_data = f.read()
         font_b64 = base64.b64encode(font_data).decode("utf-8")
 
-    # 변환된 폰트 데이터를 앱 전체 디자인(CSS)에 강제 주입
     st.markdown(f"""
         <style>
         @font-face {{
@@ -23,7 +21,7 @@ try:
             src: url(data:font/ttf;charset=utf-8;base64,{font_b64}) format('truetype');
         }}
         
-        /* 앱 전체의 모든 글씨를 사내 폰트로 멱살 잡고 고정 (!important) */
+        /* 앱 전체의 모든 글씨를 사내 폰트로 고정 */
         html, body, [class*="css"], [class*="st-"], .stMarkdown, .stText, p, h1, h2, h3, h4, h5, h6, input, button {{
             font-family: 'MBC_NEW_L', sans-serif !important;
         }}
@@ -38,11 +36,19 @@ try:
         div[data-baseweb="input"] > div {{
             border-color: #684CDB !important;
         }}
+        
+        /* 메인 타이틀 중앙 정렬 및 여백 디자인 */
+        .main-title {{
+            color: #684CDB;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 2rem;
+            margin-top: 1rem;
+        }}
         </style>
     """, unsafe_allow_html=True)
 
 except FileNotFoundError:
-    # 폰트 파일 이름이 틀렸거나 없을 때 띄워줄 에러 메시지
     st.error(f"⚠️ 사내 폰트 파일을 찾을 수 없습니다: '{font_file}'. 깃허브에 파일이름이 정확히 일치하는지 확인해주세요.")
 
 
@@ -62,25 +68,20 @@ def check_password():
     return True
 
 if check_password():
-    # --- 2. 메인 타이틀 (사내 포털 컬러 적용) ---
-    st.markdown("<h1 style='color: #684CDB; font-weight: 700;'>MBCNET 파일 인수증 생성기</h1>", unsafe_allow_html=True)
-    
-    # --- 3. 신규 프로그램 개별 입력 폼 ---
-    if "custom_codes" not in st.session_state:
-        st.session_state["custom_codes"] = {}
+    # --- 2. 왼쪽 서랍 (사이드바 - 프로그램 관리 폼 이동) ---
+    with st.sidebar:
+        st.markdown("### ⚙️ 프로그램 관리")
+        st.write("기존 코드표에 없는 새 프로그램을 임시 등록합니다.")
+        
+        if "custom_codes" not in st.session_state:
+            st.session_state["custom_codes"] = {}
 
-    with st.container(border=True):
-        st.markdown("#### 신규 프로그램 추가")
-        st.write("기존 코드표에 없는 새 프로그램을 임시로 등록합니다.")
         with st.form("new_program_form", clear_on_submit=True):
-            col1, col2 = st.columns(2)
-            with col1:
-                new_name = st.text_input("프로그램명 (예: 신농사직설7시즌)")
-            with col2:
-                new_code = st.text_input("영문 코드 (예: NBCCH)")
+            new_name = st.text_input("📝 프로그램명 (예: 신농사직설)")
+            new_code = st.text_input("🔠 영문 코드 (예: NBCCH)")
             
-            # 버튼을 보라색(Primary)으로 강제 지정
-            submitted = st.form_submit_button("추가하기", type="primary")
+            # 사이드바 꽉 차는 보라색 버튼
+            submitted = st.form_submit_button("➕ 추가하기", type="primary", use_container_width=True)
             
             if submitted:
                 if new_name and new_code:
@@ -91,13 +92,17 @@ if check_password():
                     st.warning("프로그램명과 코드를 모두 입력해주세요.")
         
         if st.session_state["custom_codes"]:
+            st.markdown("---")
             st.markdown("**[현재 추가된 프로그램]**")
             for name, code in st.session_state["custom_codes"].items():
                 st.markdown(f"- **{name}**: `{code}`")
                 
-            if st.button("목록 초기화"):
+            if st.button("목록 초기화", use_container_width=True):
                 st.session_state["custom_codes"] = {}
                 st.rerun()
+
+    # --- 3. 메인 캔버스 (챗GPT 스타일 중앙 정렬) ---
+    st.markdown("<h1 class='main-title'>📺 MBC NET 파일 인수증 생성기</h1>", unsafe_allow_html=True)
 
     # --- 제미나이 API 세팅 ---
     genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
@@ -193,5 +198,4 @@ if check_password():
                     st.session_state["messages"].append({"role": "assistant", "type": "text", "content": "이미지가 확인되지 않았습니다. 파일 첨부 아이콘을 눌러 이미지를 올려주세요."})
             
             st.rerun()
-
-
+        
