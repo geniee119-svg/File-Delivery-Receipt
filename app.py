@@ -27,7 +27,7 @@ if check_password():
     genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
     
     # ★ 최신 2.5 Pro 모델 적용
-    model = genai.GenerativeModel('gemini-2.5-pro')
+    model = genai.GenerativeModel('gemini-2.5-flash')
 
     # --- 3. 파일 업로드 기능 ---
     uploaded_file = st.file_uploader("여기에 목록 이미지를 드래그 앤 드롭 하세요", type=["png", "jpg", "jpeg"])
@@ -84,3 +84,4 @@ if check_password():
                     st.balloons() # 성공 시 풍선 애니메이션 효과
                 except Exception as e:
                     st.error(f"오류가 발생했습니다: {e}")
+
