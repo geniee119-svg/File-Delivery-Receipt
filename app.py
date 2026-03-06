@@ -2,6 +2,27 @@ import streamlit as st
 import google.generativeai as genai
 from PIL import Image
 
+# --- 앱 기본 설정 (브라우저 탭 이름 및 아이콘) ---
+st.set_page_config(page_title="MBC NET 파일 인수증", page_icon="📺")
+
+# --- CSS 디자인 커스터마이징 (사내 포털 스타일 적용) ---
+st.markdown("""
+    <style>
+    /* 상단 보라색 포인트 띠 */
+    .stApp > header {
+        background-color: transparent;
+        border-top: 5px solid #5C3292;
+    }
+    /* 불필요한 스트림릿 기본 메뉴 및 푸터 숨기기 */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    /* 버튼 텍스트를 조금 더 굵고 선명하게 */
+    .stButton>button {
+        font-weight: 600;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
 # --- 1. 보안 설정: 비밀번호 확인 ---
 def check_password():
     if "password_entered" not in st.session_state:
@@ -64,7 +85,6 @@ if check_password():
             for name, code in st.session_state["custom_codes"].items():
                 custom_section += f"- {name}: {code}\n"
                 
-        # ★ 프롬프트(규칙) 대폭 수정 및 강화 ★
         return f"""
 당신은 방송 편성 데이터 정제 전문가입니다. 
 첨부된 이미지(영상 목록 캡처본)를 분석하여 '파일 인수증' 텍스트를 작성해야 합니다.
@@ -148,3 +168,4 @@ if check_password():
                     st.session_state["messages"].append({"role": "assistant", "type": "text", "content": "이미지가 확인되지 않았습니다. 파일 첨부 아이콘을 눌러 이미지를 올려주세요."})
             
             st.rerun()
+            
