@@ -38,13 +38,12 @@ if check_password():
             
             if submitted:
                 if new_name and new_code:
-                    clean_name = new_name.replace(" ", "") # 띄어쓰기 자동 제거
+                    clean_name = new_name.replace(" ", "")
                     st.session_state["custom_codes"][clean_name] = new_code
                     st.success(f"'{clean_name}' 등록 완료!")
                 else:
                     st.warning("프로그램명과 코드를 모두 입력해주세요.")
         
-        # 등록된 임시 프로그램 목록 실시간 출력
         if st.session_state["custom_codes"]:
             st.markdown("**[현재 추가된 프로그램]**")
             for name, code in st.session_state["custom_codes"].items():
@@ -58,7 +57,6 @@ if check_password():
     genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
     model = genai.GenerativeModel('gemini-2.5-flash')
 
-    # 프롬프트 동적 생성 함수
     def get_prompt():
         custom_section = ""
         if st.session_state["custom_codes"]:
@@ -118,24 +116,21 @@ if check_password():
             elif msg["type"] == "image":
                 st.image(msg["content"], caption="업로드된 이미지", width=400)
 
-    # --- 5. 스마트 채팅창 (이미지 붙여넣기 및 엔터 실행 완벽 지원) ---
-    prompt_input = st.chat_input("궁금한점을 타이핑하고 엔터를 누르세요", accept_file=True, file_type=["png", "jpg", "jpeg"])
+    # --- 5. 스마트 채팅창 (문구 삭제 완료) ---
+    prompt_input = st.chat_input(" ", accept_file=True, file_type=["png", "jpg", "jpeg"])
 
     if prompt_input:
+        # 버전이 낮아 파일 객체 인식이 안 될 경우의 방어 코드
         if isinstance(prompt_input, str):
-            # Streamlit 구버전 예외 처리
-            st.session_state["messages"].append({"role": "user", "type": "text", "content": prompt_input})
-            st.session_state["messages"].append({"role": "assistant", "type": "text", "content": "현재 앱 구동 환경이 이미지 붙여넣기를 지원하지 않습니다. 스트림릿 서버를 재부팅(Reboot) 해주세요."})
+            st.session_state["messages"].append({"role": "assistant", "type": "text", "content": "현재 스트림릿 구버전이 작동 중이라 이미지 붙여넣기가 차단되었습니다. 깃허브 requirements.txt 확인 후 서버를 Reboot 해주세요."})
             st.rerun()
         else:
             user_text = prompt_input.text
             user_files = prompt_input.files
             
-            # 텍스트가 있다면 출력
             if user_text:
                 st.session_state["messages"].append({"role": "user", "type": "text", "content": user_text})
                 
-            # 이미지 첨부(붙여넣기)가 감지되었을 때 메인 프로세스 실행
             if user_files:
                 img = Image.open(user_files[0])
                 st.session_state["messages"].append({"role": "user", "type": "image", "content": img})
@@ -147,8 +142,7 @@ if check_password():
                     except Exception as e:
                         st.session_state["messages"].append({"role": "assistant", "type": "text", "content": f"오류가 발생했습니다: {e}"})
             else:
-                # 텍스트만 치고 이미지를 안 올렸을 때의 안내문
                 if user_text:
-                    st.session_state["messages"].append({"role": "assistant", "type": "text", "content": "이미지가 확인되지 않았습니다. 추출하시려는 캡처본을 채팅창에 붙여넣기(Ctrl+V) 하거나 왼쪽 아이콘으로 첨부한 뒤 엔터를 눌러주세요."})
+                    st.session_state["messages"].append({"role": "assistant", "type": "text", "content": "이미지가 확인되지 않았습니다. 입력창을 클릭한 뒤 Ctrl+V로 이미지를 붙여넣고 엔터를 눌러주세요."})
             
             st.rerun()
