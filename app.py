@@ -21,9 +21,15 @@ try:
             src: url(data:font/ttf;charset=utf-8;base64,{font_b64}) format('truetype');
         }}
         
-        /* 1. 앱 전체 폰트 적용 */
+        /* 1. 앱 전체 폰트 적용 (우선순위를 조절하여 아이콘 깨짐 방지) */
         html, body, p, div, span, input, button, textarea, label, li {{
-            font-family: 'MBC_NEW_L', sans-serif !important;
+            font-family: 'MBC_NEW_L', sans-serif;
+        }}
+        
+        /* 아이콘 폰트 절대 보호 구역 (텍스트 노출 에러 완벽 차단) */
+        .material-symbols-rounded, .material-symbols-outlined, [class*="stIcon"] *, 
+        [data-testid="collapsedControl"] *, [data-testid="stSidebarCollapseButton"] * {{
+            font-family: 'Material Symbols Rounded', sans-serif !important;
         }}
         
         /* 2. 상단 쨍한 형광 보라색 포인트 띠 */
@@ -37,52 +43,25 @@ try:
             border-color: #684CDB !important;
         }}
 
-        /* 4. 사이드바 여닫기 버튼 (텍스트 찌꺼기 완벽 제거 및 보라색 삼각형 고정) */
-        button[data-testid="collapsedControl"],
-        button[data-testid="stSidebarCollapseButton"] {{
-            color: transparent !important; /* double_arrow_right 글자 숨김 */
-        }}
-        button[data-testid="collapsedControl"] *,
-        button[data-testid="stSidebarCollapseButton"] * {{
-            display: none !important; /* 내부 svg, span 등 요소 강제 삭제 */
-        }}
-        
-        /* 접혀있을 때 (▶) */
-        button[data-testid="collapsedControl"]::after {{
-            content: "▶" !important;
+        /* 4. 사이드바 여닫기 버튼 완벽 복구 및 색상/크기 조정 */
+        /* 억지 삼각형을 없애고 원래의 예쁜 화살표를 살리되, 색상과 크기만 바꿉니다 */
+        [data-testid="collapsedControl"] span,
+        [data-testid="stSidebarCollapseButton"] span {{
             color: #684CDB !important;
-            font-size: 20px !important;
-            display: block !important;
-            visibility: visible !important;
+            font-size: 32px !important; /* 화살표 크기 시원하게 확대 */
         }}
-        /* 펼쳐져있을 때 (◀) */
-        button[data-testid="stSidebarCollapseButton"]::after {{
-            content: "◀" !important;
-            color: #684CDB !important;
-            font-size: 20px !important;
-            display: block !important;
-            visibility: visible !important;
+        [data-testid="collapsedControl"] svg,
+        [data-testid="stSidebarCollapseButton"] svg {{
+            fill: #684CDB !important;
+            width: 32px !important;
+            height: 32px !important;
         }}
 
-        /* 5. 채팅창 이모티콘(아바타) 영역 및 텍스트(face, art_) 강제 완전 삭제 */
-        div[data-testid="stChatMessageAvatar"],
-        div[data-testid="chatAvatarIcon-user"],
-        div[data-testid="chatAvatarIcon-assistant"] {{
-            display: none !important;
-        }}
-        /* 머티리얼 아이콘 텍스트 누수 방지 */
-        .stChatMessage span[class*="material"] {{
-            display: none !important;
-            color: transparent !important;
-        }}
-        
-        /* 6. 추출 데이터(코드 블록) 폰트 굵기/크기 완벽 통일 */
-        .stCodeBlock, .stCodeBlock code, .stCodeBlock pre, .stCodeBlock span {{
-            font-family: 'MBC_NEW_L', monospace !important;
-            font-size: 15px !important;
-            font-weight: normal !important;
+        /* 5. 추출 데이터(코드 블록) 폰트 및 크기 완벽 통일 */
+        .stCodeBlock code, .stCodeBlock pre {{
+            font-family: 'MBC_NEW_L', 'Consolas', monospace !important;
+            font-size: 14px !important;
             line-height: 1.6 !important;
-            color: #262730 !important;
         }}
         </style>
     """, unsafe_allow_html=True)
@@ -139,6 +118,8 @@ if check_password():
                 st.session_state["custom_codes"] = {}
                 st.rerun()
 
+    # --- 메인 타이틀(MBCNET 파일 인수증 생성기) 완전 삭제 ---
+
     # --- 제미나이 API 세팅 ---
     genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
     model = genai.GenerativeModel('gemini-2.5-flash')
@@ -153,16 +134,15 @@ if check_password():
         return f"""
 당신은 방송 편성 데이터 정제 전문가입니다. 
 첨부된 이미지(영상 목록 캡처본)를 분석하여 '파일 인수증' 텍스트를 작성해야 합니다.
-데이터 처리는 반드시 Python(Code Interpreter)을 사용해서 수행해 주세요.
 
 [작업 규칙]
 1. 회차 추출 (매우 중요): 파일명 문자열을 왼쪽부터 읽었을 때 **가장 먼저 등장하는 숫자(숫자+회/화)**를 무조건 최종 회차로 확정합니다. 파일명 중간이나 프로그램명 뒤쪽에 다른 회차가 적혀 있더라도 절대 무시하세요. 
    - 예시: '39회_260125일_시토_40회' -> 39회 추출 (40회 무시)
-2. 프로그램명은 띄어쓰기를 모두 없애고 아래 [코드표]의 공식 명칭으로 통일합니다.
+   - 예시: '49회_64화_제주엔' -> 49회 추출 (64화 무시)
+2. 프로그램명은 띄어쓰기를 모두 없애고 아래 [코드표]의 공식 명칭으로 통일합니다. (예: 테마기행 길 -> 테마기행길, 시토 -> 시사토론)
 3. 아이디 생성 규칙: [영문 코드 5자리] + [회차 4자리 숫자(빈자리는 0으로 채움)]. 예: 82회 -> 0082
-4. 출력 포맷: 엑셀에 바로 붙여넣을 수 있게 각 항목을 '탭(Tab)'으로만 구분하며, 각 영상 목록은 반드시 줄바꿈(Enter)으로 구분하여 한 줄에 하나씩 작성하세요. 마크다운 표 형태(|)는 절대 사용하지 마세요.
-5. 열 구성: [아이디] (탭) [영상 길이(예: 00:45:00)] (탭) [프로그램명+회차] (탭) [비고(빈칸)]
-6. 재방/본방 표기: 기본적으로 프로그램명 앞에 본방/재방 여부를 표기하지 않습니다. 단, 아래 [본방 시간대 지정 프로그램]에 해당하는 경우에만 프로그램명 앞에 '[본방]'을 붙이세요.
+4. 출력 포맷: 엑셀에 바로 붙여넣을 수 있게 각 항목을 '탭(Tab)'으로만 구분하며, **각 영상 목록은 반드시 줄바꿈(Enter)으로 구분하여 한 줄에 하나씩 작성하세요.** 마크다운 표 형태(|)는 절대 사용하지 마세요.
+5. 열 구성: [아이디] (탭) [영상 길이(예: 00:45:00)] (탭) [본방]프로그램명+회차 (탭) [비고(빈칸)]
 
 [기존 프로그램 코드표]
 - 어영차바다야: NBOBA
@@ -189,18 +169,16 @@ if check_password():
 - 이슈잇다: NBKKA
 {custom_section}
 
-[본방 시간대 지정 프로그램]
-(여기에 전달해주실 본방 프로그램 목록과 시간대 규칙이 적용됩니다.)
-
 위 규칙과 코드표를 엄격하게 적용하여 탭으로 구분된 텍스트 결과물만 출력하세요. 다른 부연 설명이나 인사말은 절대 하지 마세요.
 """
 
-    # --- 4. 대화 기록 출력 구역 ---
+    # --- 4. 대화 기록 출력 구역 (이모티콘 완벽 제거) ---
     if "messages" not in st.session_state:
         st.session_state["messages"] = []
 
     for msg in st.session_state["messages"]:
-        with st.chat_message(msg["role"]):
+        # avatar=None을 추가하여 기본 스트림릿 이모티콘 아바타 숨기기
+        with st.chat_message(msg["role"], avatar=None):
             if msg["type"] == "text":
                 st.markdown(msg["content"])
             elif msg["type"] == "code":
