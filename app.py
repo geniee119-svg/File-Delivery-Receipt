@@ -24,8 +24,7 @@ for msg in st.session_state.messages:
 # 사용자가 캡처(Ctrl+C)한 상태에서 이 버튼을 누르면 이미지가 로드됩니다.
 pasted_image = paste_image_button(
     label="📋 여기에 이미지를 붙여넣으세요 (클릭)",
-    text="이미지가 감지되었습니다! 클릭하여 업로드",
-    color="primary",
+
 )
 
 # 5. 이미지가 감지되었을 때의 처리 로직
@@ -68,3 +67,4 @@ if prompt := st.chat_input("추가 요청 사항이 있으면 입력하세요...
     with st.chat_message("user"):
         st.write(prompt)
     st.session_state.messages.append({"role": "user", "type": "text", "content": prompt})
+
