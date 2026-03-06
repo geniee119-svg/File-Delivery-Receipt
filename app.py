@@ -25,7 +25,7 @@ if check_password():
     
     # API 키 세팅 (Streamlit Secrets에서 가져옴)
     genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-    model = genai.GenerativeModel('gemini-1.5-flash') # 빠르고 가벼운 비전 모델
+    model = genai.GenerativeModel('gemini-1.5-flash-latest') # 빠르고 가벼운 비전 모델
 
     # --- 3. 파일 업로드 기능 ---
     uploaded_file = st.file_uploader("여기에 목록 이미지를 드래그 앤 드롭 하세요", type=["png", "jpg", "jpeg"])
@@ -80,4 +80,5 @@ if check_password():
                     st.success("✨ 작업이 완료되었습니다! 아래 박스 우측 상단의 '복사' 아이콘을 눌러 엑셀 A1 셀에 붙여넣으세요.")
                     st.code(response.text, language="text")
                 except Exception as e:
+
                     st.error(f"오류가 발생했습니다: {e}")
