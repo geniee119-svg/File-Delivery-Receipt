@@ -21,15 +21,9 @@ try:
             src: url(data:font/ttf;charset=utf-8;base64,{font_b64}) format('truetype');
         }}
         
-        /* 1. 앱 전체 폰트 적용 (우선순위를 조절하여 아이콘 깨짐 방지) */
+        /* 1. 앱 전체 폰트 적용 */
         html, body, p, div, span, input, button, textarea, label, li {{
-            font-family: 'MBC_NEW_L', sans-serif;
-        }}
-        
-        /* 아이콘 폰트 절대 보호 구역 (텍스트 노출 에러 완벽 차단) */
-        .material-symbols-rounded, .material-symbols-outlined, [class*="stIcon"] *, 
-        [data-testid="collapsedControl"] *, [data-testid="stSidebarCollapseButton"] * {{
-            font-family: 'Material Symbols Rounded', sans-serif !important;
+            font-family: 'MBC_NEW_L', sans-serif !important;
         }}
         
         /* 2. 상단 쨍한 형광 보라색 포인트 띠 */
@@ -43,25 +37,39 @@ try:
             border-color: #684CDB !important;
         }}
 
-        /* 4. 사이드바 여닫기 버튼 완벽 복구 및 색상/크기 조정 */
-        /* 억지 삼각형을 없애고 원래의 예쁜 화살표를 살리되, 색상과 크기만 바꿉니다 */
-        [data-testid="collapsedControl"] span,
-        [data-testid="stSidebarCollapseButton"] span {{
-            color: #684CDB !important;
-            font-size: 32px !important; /* 화살표 크기 시원하게 확대 */
+        /* 4. 사이드바 여닫기 버튼 (보라색 삼각형으로 완벽 고정) */
+        button[data-testid="collapsedControl"] svg,
+        button[data-testid="stSidebarCollapseButton"] svg {{
+            display: none !important;
         }}
-        [data-testid="collapsedControl"] svg,
-        [data-testid="stSidebarCollapseButton"] svg {{
-            fill: #684CDB !important;
-            width: 32px !important;
-            height: 32px !important;
+        /* 접혀있을 때 (▶) */
+        button[data-testid="collapsedControl"]::before {{
+            content: "▶" !important;
+            color: #684CDB !important;
+            font-size: 20px !important;
+            display: block !important;
+        }}
+        /* 펼쳐져있을 때 (◀) */
+        button[data-testid="stSidebarCollapseButton"]::before {{
+            content: "◀" !important;
+            color: #684CDB !important;
+            font-size: 20px !important;
+            display: block !important;
         }}
 
-        /* 5. 추출 데이터(코드 블록) 폰트 및 크기 완벽 통일 */
-        .stCodeBlock code, .stCodeBlock pre {{
-            font-family: 'MBC_NEW_L', 'Consolas', monospace !important;
-            font-size: 14px !important;
+        /* 5. 채팅창 이모티콘(아바타) 영역 강제 완전 삭제 */
+        div[data-testid="stChatMessageAvatar"] {{
+            display: none !important;
+        }}
+        
+        /* 6. 추출 데이터(코드 블록) 폰트 굵기/크기 완벽 통일 (첫 줄 폰트 다름 현상 해결) */
+        /* 코드 블록 내부의 모든 요소(span 포함)를 멱살 잡고 통일시킵니다 */
+        .stCodeBlock, .stCodeBlock code, .stCodeBlock pre, .stCodeBlock span {{
+            font-family: 'MBC_NEW_L', monospace !important;
+            font-size: 15px !important;
+            font-weight: normal !important;
             line-height: 1.6 !important;
+            color: #262730 !important;
         }}
         </style>
     """, unsafe_allow_html=True)
@@ -118,8 +126,6 @@ if check_password():
                 st.session_state["custom_codes"] = {}
                 st.rerun()
 
-    # --- 메인 타이틀(MBCNET 파일 인수증 생성기) 완전 삭제 ---
-
     # --- 제미나이 API 세팅 ---
     genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
     model = genai.GenerativeModel('gemini-2.5-flash')
@@ -172,13 +178,12 @@ if check_password():
 위 규칙과 코드표를 엄격하게 적용하여 탭으로 구분된 텍스트 결과물만 출력하세요. 다른 부연 설명이나 인사말은 절대 하지 마세요.
 """
 
-    # --- 4. 대화 기록 출력 구역 (이모티콘 완벽 제거) ---
+    # --- 4. 대화 기록 출력 구역 ---
     if "messages" not in st.session_state:
         st.session_state["messages"] = []
 
     for msg in st.session_state["messages"]:
-        # avatar=None을 추가하여 기본 스트림릿 이모티콘 아바타 숨기기
-        with st.chat_message(msg["role"], avatar=None):
+        with st.chat_message(msg["role"]):
             if msg["type"] == "text":
                 st.markdown(msg["content"])
             elif msg["type"] == "code":
