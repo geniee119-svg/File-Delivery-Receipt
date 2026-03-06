@@ -4,7 +4,7 @@ from PIL import Image
 import base64
 
 # --- 앱 기본 설정 ---
-st.set_page_config(page_title="MBC NET 파일 인수증", page_icon="📺")
+st.set_page_config(page_title="MBCNET 파일 인수증")
 
 # --- 사내 전용 폰트(MBC NEW L.ttf) 로드 및 CSS 적용 ---
 font_file = "MBC NEW L.ttf"
@@ -70,17 +70,17 @@ if check_password():
         st.session_state["custom_codes"] = {}
 
     with st.container(border=True):
-        st.markdown("#### ⚙️ 신규 프로그램 추가")
+        st.markdown("#### 신규 프로그램 추가")
         st.write("기존 코드표에 없는 새 프로그램을 임시로 등록합니다.")
         with st.form("new_program_form", clear_on_submit=True):
             col1, col2 = st.columns(2)
             with col1:
-                new_name = st.text_input("📝 프로그램명 (예: 신농사직설7시즌)")
+                new_name = st.text_input("프로그램명 (예: 신농사직설7시즌)")
             with col2:
-                new_code = st.text_input("🔠 영문 코드 (예: NBCCH)")
+                new_code = st.text_input("영문 코드 (예: NBCCH)")
             
             # 버튼을 보라색(Primary)으로 강제 지정
-            submitted = st.form_submit_button("➕ 추가하기", type="primary")
+            submitted = st.form_submit_button("추가하기", type="primary")
             
             if submitted:
                 if new_name and new_code:
@@ -193,3 +193,4 @@ if check_password():
                     st.session_state["messages"].append({"role": "assistant", "type": "text", "content": "이미지가 확인되지 않았습니다. 파일 첨부 아이콘을 눌러 이미지를 올려주세요."})
             
             st.rerun()
+
