@@ -25,7 +25,9 @@ if check_password():
     
     # API 키 세팅 (Streamlit Secrets에서 가져옴)
     genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-    model = genai.GenerativeModel('gemini-1.5-flash-latest') # 빠르고 가벼운 비전 모델
+    
+    # ★ 수정된 부분: AI 모델을 'gemini-1.5-pro'로 변경하여 오류 해결 및 인식률 향상
+    model = genai.GenerativeModel('gemini-1.5-pro')
 
     # --- 3. 파일 업로드 기능 ---
     uploaded_file = st.file_uploader("여기에 목록 이미지를 드래그 앤 드롭 하세요", type=["png", "jpg", "jpeg"])
@@ -35,7 +37,7 @@ if check_password():
         st.image(image, caption='업로드된 원본 이미지', use_column_width=True)
         
         if st.button("파일 인수증 추출 실행"):
-            with st.spinner('제미나이가 이미지를 읽고 데이터를 정제하고 있습니다...'):
+            with st.spinner('제미나이가 이미지를 읽고 데이터를 정제하고 있습니다... (프로 모델은 약 10~20초 소요됩니다)'):
                 # --- 4. 핵심 AI 프롬프트 (규칙 및 코드표 내장) ---
                 prompt = """
 당신은 방송 편성 데이터 정제 전문가입니다. 
@@ -79,6 +81,6 @@ if check_password():
                     response = model.generate_content([prompt, image])
                     st.success("✨ 작업이 완료되었습니다! 아래 박스 우측 상단의 '복사' 아이콘을 눌러 엑셀 A1 셀에 붙여넣으세요.")
                     st.code(response.text, language="text")
+                    st.balloons() # 성공 시 풍선 애니메이션 효과
                 except Exception as e:
-
                     st.error(f"오류가 발생했습니다: {e}")
