@@ -2,22 +2,20 @@ import streamlit as st
 import google.generativeai as genai
 from PIL import Image
 
-# --- 앱 기본 설정 (브라우저 탭 이름 및 아이콘) ---
+# --- 앱 기본 설정 ---
 st.set_page_config(page_title="MBC NET 파일 인수증", page_icon="📺")
 
-# --- CSS 디자인 커스터마이징 (사내 포털 스타일 적용) ---
+# --- CSS 디자인 커스터마이징 (최신 버전에 맞게 수정) ---
 st.markdown("""
     <style>
-    /* 상단 보라색 포인트 띠 */
-    .stApp > header {
+    /* 상단 보라색 포인트 띠 (스트림릿 최신 태그 적용) */
+    [data-testid="stHeader"] {
         background-color: transparent;
-        border-top: 5px solid #5C3292;
+        border-top: 8px solid #5C3292;
     }
-    /* 불필요한 스트림릿 기본 메뉴 및 푸터 숨기기 */
-    footer {visibility: hidden;}
-    /* 버튼 텍스트를 조금 더 굵고 선명하게 */
-    .stButton>button {
-        font-weight: 600;
+    /* 메인 텍스트 입력창 포커스 시 테두리 색상 강제 지정 */
+    div[data-baseweb="input"] > div {
+        border-color: #5C3292 !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -38,8 +36,8 @@ def check_password():
     return True
 
 if check_password():
-    # --- 2. 메인 타이틀 ---
-    st.title("📺 파일 인수증 생성기")
+    # --- 2. 메인 타이틀 (사내 포털 컬러 적용) ---
+    st.markdown("<h1 style='color: #5C3292;'>📺 MBC NET 파일 인수증 생성기</h1>", unsafe_allow_html=True)
     
     # --- 3. 신규 프로그램 개별 입력 폼 ---
     if "custom_codes" not in st.session_state:
@@ -54,7 +52,9 @@ if check_password():
                 new_name = st.text_input("📝 프로그램명 (예: 신농사직설7시즌)")
             with col2:
                 new_code = st.text_input("🔠 영문 코드 (예: NBCCH)")
-            submitted = st.form_submit_button("➕ 추가하기")
+            
+            # ★ 버튼을 보라색(Primary)으로 강제 지정 ★
+            submitted = st.form_submit_button("➕ 추가하기", type="primary")
             
             if submitted:
                 if new_name and new_code:
@@ -156,7 +156,7 @@ if check_password():
                 img = Image.open(user_files[0])
                 st.session_state["messages"].append({"role": "user", "type": "image", "content": img})
                 
-                with st.spinner('제미나이가 데이터를 분석하고 있습니다...'):
+                with st.spinner('데이터를 분석하고 있습니다...'):
                     try:
                         response = model.generate_content([get_prompt(), img])
                         st.session_state["messages"].append({"role": "assistant", "type": "code", "content": response.text})
@@ -167,5 +167,3 @@ if check_password():
                     st.session_state["messages"].append({"role": "assistant", "type": "text", "content": "이미지가 확인되지 않았습니다. 파일 첨부 아이콘을 눌러 이미지를 올려주세요."})
             
             st.rerun()
-            
-
