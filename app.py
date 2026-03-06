@@ -4,7 +4,7 @@ from PIL import Image
 import base64
 
 # --- 앱 기본 설정 ---
-st.set_page_config(page_title="MBC NET 파일 인수증", page_icon="📺", layout="centered")
+st.set_page_config(page_title="MBC NET 파일 인수증", layout="centered")
 
 # --- 사내 전용 폰트(MBC NEW L.ttf) 로드 및 CSS 적용 ---
 font_file = "MBC NEW L.ttf"
@@ -21,35 +21,58 @@ try:
             src: url(data:font/ttf;charset=utf-8;base64,{font_b64}) format('truetype');
         }}
         
-        /* 앱 전체의 모든 글씨를 사내 폰트로 고정 */
-        html, body, [class*="css"], [class*="st-"], .stMarkdown, .stText, p, h1, h2, h3, h4, h5, h6, input, button {{
-            font-family: 'MBC_NEW_L', sans-serif !important;
+        /* 1. 앱 전체 폰트 적용 (스트림릿 고유 아이콘은 깨지지 않도록 예외 처리) */
+        * {{
+            font-family: 'MBC_NEW_L', sans-serif;
+        }}
+        .material-symbols-rounded, .material-icons, [class*="stIcon"] {{
+            font-family: 'Material Symbols Rounded', 'Material Icons', sans-serif !important;
         }}
 
-        /* 상단 쨍한 형광 보라색 포인트 띠 */
+        /* 2. 상단 쨍한 형광 보라색 포인트 띠 */
         [data-testid="stHeader"] {{
             background-color: transparent;
             border-top: 8px solid #684CDB;
         }}
         
-        /* 메인 텍스트 입력창 포커스 시 테두리 색상 강제 지정 */
+        /* 3. 메인 텍스트 입력창 포커스 시 테두리 색상 강제 지정 */
         div[data-baseweb="input"] > div {{
             border-color: #684CDB !important;
         }}
         
-        /* 메인 타이틀 중앙 정렬 및 여백 디자인 */
+        /* 4. 메인 타이틀 크기 대폭 축소 및 디자인 */
         .main-title {{
             color: #684CDB;
             font-weight: 700;
+            font-size: 1.6rem; /* 폰트 사이즈를 깔끔하게 축소 */
             text-align: center;
             margin-bottom: 2rem;
             margin-top: 1rem;
+            letter-spacing: -0.5px;
+        }}
+
+        /* 5. 사이드바 여닫기 버튼을 보라색 삼각형으로 완벽 교체 */
+        [data-testid="collapsedControl"] svg, [data-testid="collapsedControl"] span,
+        [data-testid="stSidebarCollapseButton"] svg, [data-testid="stSidebarCollapseButton"] span {{
+            display: none !important;
+        }}
+        [data-testid="collapsedControl"]::before {{
+            content: "▶";
+            color: #684CDB;
+            font-size: 20px;
+            font-family: sans-serif !important;
+        }}
+        [data-testid="stSidebarCollapseButton"]::before {{
+            content: "◀";
+            color: #684CDB;
+            font-size: 20px;
+            font-family: sans-serif !important;
         }}
         </style>
     """, unsafe_allow_html=True)
 
 except FileNotFoundError:
-    st.error(f"⚠️ 사내 폰트 파일을 찾을 수 없습니다: '{font_file}'. 깃허브에 파일이름이 정확히 일치하는지 확인해주세요.")
+    st.error(f"사내 폰트 파일을 찾을 수 없습니다: '{font_file}'. 깃허브에 파일이름이 정확히 일치하는지 확인해주세요.")
 
 
 # --- 1. 보안 설정: 비밀번호 확인 ---
@@ -68,26 +91,25 @@ def check_password():
     return True
 
 if check_password():
-    # --- 2. 왼쪽 서랍 (사이드바 - 프로그램 관리 폼 이동) ---
+    # --- 2. 왼쪽 서랍 (사이드바 - 프로그램 관리 폼) ---
     with st.sidebar:
-        st.markdown("### ⚙️ 프로그램 관리")
+        st.markdown("### 프로그램 관리")
         st.write("기존 코드표에 없는 새 프로그램을 임시 등록합니다.")
         
         if "custom_codes" not in st.session_state:
             st.session_state["custom_codes"] = {}
 
         with st.form("new_program_form", clear_on_submit=True):
-            new_name = st.text_input("📝 프로그램명 (예: 신농사직설)")
-            new_code = st.text_input("🔠 영문 코드 (예: NBCCH)")
+            new_name = st.text_input("프로그램명 (예: 신농사직설)")
+            new_code = st.text_input("영문 코드 (예: NBCCH)")
             
-            # 사이드바 꽉 차는 보라색 버튼
-            submitted = st.form_submit_button("➕ 추가하기", type="primary", use_container_width=True)
+            submitted = st.form_submit_button("추가하기", type="primary", use_container_width=True)
             
             if submitted:
                 if new_name and new_code:
                     clean_name = new_name.replace(" ", "")
                     st.session_state["custom_codes"][clean_name] = new_code
-                    st.success(f"'{clean_name}' 등록 완료!")
+                    st.success(f"'{clean_name}' 등록 완료")
                 else:
                     st.warning("프로그램명과 코드를 모두 입력해주세요.")
         
@@ -101,8 +123,8 @@ if check_password():
                 st.session_state["custom_codes"] = {}
                 st.rerun()
 
-    # --- 3. 메인 캔버스 (챗GPT 스타일 중앙 정렬) ---
-    st.markdown("<h1 class='main-title'>📺 MBC NET 파일 인수증 생성기</h1>", unsafe_allow_html=True)
+    # --- 3. 메인 캔버스 (이모티콘 제거 및 타이틀 축소) ---
+    st.markdown("<h1 class='main-title'>MBC NET 파일 인수증 생성기</h1>", unsafe_allow_html=True)
 
     # --- 제미나이 API 세팅 ---
     genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
@@ -167,14 +189,14 @@ if check_password():
             elif msg["type"] == "code":
                 st.code(msg["content"], language="text")
             elif msg["type"] == "image":
-                st.image(msg["content"], caption="업로드된 이미지", width=400)
+                st.image(msg["content"], caption="업로드된 캡처본", width=400)
 
     # --- 5. 스마트 채팅창 ---
     prompt_input = st.chat_input(" ", accept_file=True, file_type=["png", "jpg", "jpeg"])
 
     if prompt_input:
         if isinstance(prompt_input, str):
-            st.session_state["messages"].append({"role": "assistant", "type": "text", "content": "현재 스트림릿 구버전이 작동 중이라 이미지 직접 첨부가 제한될 수 있습니다."})
+            st.session_state["messages"].append({"role": "assistant", "type": "text", "content": "현재 스트림릿 구버전이 작동 중이라 이미지 직접 첨부가 제한될 수 있습니다. 서버를 재부팅해주세요."})
             st.rerun()
         else:
             user_text = prompt_input.text
@@ -198,4 +220,4 @@ if check_password():
                     st.session_state["messages"].append({"role": "assistant", "type": "text", "content": "이미지가 확인되지 않았습니다. 파일 첨부 아이콘을 눌러 이미지를 올려주세요."})
             
             st.rerun()
-        
+            
