@@ -21,12 +21,15 @@ try:
             src: url(data:font/ttf;charset=utf-8;base64,{font_b64}) format('truetype');
         }}
         
-        /* 1. 앱 전체 폰트 적용 (스트림릿 고유 아이콘은 깨지지 않도록 예외 처리) */
-        * {{
-            font-family: 'MBC_NEW_L', sans-serif !important;
+        /* 1. 앱 전체 폰트 적용 (우선순위를 조절하여 아이콘 깨짐 방지) */
+        html, body, p, div, span, input, button, textarea, label, li {{
+            font-family: 'MBC_NEW_L', sans-serif;
         }}
-        .material-symbols-rounded, .material-icons, [class*="stIcon"] {{
-            font-family: 'Material Symbols Rounded', 'Material Icons', sans-serif !important;
+        
+        /* 아이콘 폰트 절대 보호 구역 (텍스트 노출 에러 완벽 차단) */
+        .material-symbols-rounded, .material-symbols-outlined, [class*="stIcon"] *, 
+        [data-testid="collapsedControl"] *, [data-testid="stSidebarCollapseButton"] * {{
+            font-family: 'Material Symbols Rounded', sans-serif !important;
         }}
         
         /* 2. 상단 쨍한 형광 보라색 포인트 띠 */
@@ -40,32 +43,21 @@ try:
             border-color: #684CDB !important;
         }}
 
-        /* 4. 메인 타이틀 CSS 삭제 (타이틀을 삭제하므로) */
-
-        /* 5. 사이드바 여닫기 버튼을 보라색 삼각형으로 완벽 교체 및 정렬 문제 해결 */
-        /* 스트림릿 기본 SVG 아이콘과 텍스트 숨기기 */
-        [data-testid="collapsedControl"] svg, [data-testid="collapsedControl"] span,
-        [data-testid="stSidebarCollapseButton"] svg, [data-testid="stSidebarCollapseButton"] span {{
-            display: none !important;
+        /* 4. 사이드바 여닫기 버튼 완벽 복구 및 색상/크기 조정 */
+        /* 억지 삼각형을 없애고 원래의 예쁜 화살표를 살리되, 색상과 크기만 바꿉니다 */
+        [data-testid="collapsedControl"] span,
+        [data-testid="stSidebarCollapseButton"] span {{
+            color: #684CDB !important;
+            font-size: 32px !important; /* 화살표 크기 시원하게 확대 */
         }}
-        /* 접혀있을 때 삼각형 아이콘 (▶) 추가 */
-        [data-testid="collapsedControl"]::before {{
-            content: "▶";
-            color: #684CDB;
-            font-size: 20px;
-            font-family: sans-serif !important;
-            vertical-align: middle;
-        }}
-        /* 펼쳐져있을 때 삼각형 아이콘 (◀) 추가 */
-        [data-testid="stSidebarCollapseButton"]::before {{
-            content: "◀";
-            color: #684CDB;
-            font-size: 20px;
-            font-family: sans-serif !important;
-            vertical-align: middle;
+        [data-testid="collapsedControl"] svg,
+        [data-testid="stSidebarCollapseButton"] svg {{
+            fill: #684CDB !important;
+            width: 32px !important;
+            height: 32px !important;
         }}
 
-        /* 6. 추출 데이터 monospace 코드 블록 폰트 및 크기 통일 (!important 필수) */
+        /* 5. 추출 데이터(코드 블록) 폰트 및 크기 완벽 통일 */
         .stCodeBlock code, .stCodeBlock pre {{
             font-family: 'MBC_NEW_L', 'Consolas', monospace !important;
             font-size: 14px !important;
@@ -94,7 +86,7 @@ def check_password():
     return True
 
 if check_password():
-    # --- 2. 왼쪽 서랍 (사이드바 - 프로그램 관리 폼 이동 및 이모티콘 제거) ---
+    # --- 2. 왼쪽 서랍 (사이드바 - 프로그램 관리 폼) ---
     with st.sidebar:
         st.markdown("### 프로그램 관리")
         st.write("기존 코드표에 없는 새 프로그램을 임시 등록합니다.")
@@ -125,6 +117,8 @@ if check_password():
             if st.button("목록 초기화", use_container_width=True):
                 st.session_state["custom_codes"] = {}
                 st.rerun()
+
+    # --- 메인 타이틀(MBCNET 파일 인수증 생성기) 완전 삭제 ---
 
     # --- 제미나이 API 세팅 ---
     genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
@@ -178,7 +172,7 @@ if check_password():
 위 규칙과 코드표를 엄격하게 적용하여 탭으로 구분된 텍스트 결과물만 출력하세요. 다른 부연 설명이나 인사말은 절대 하지 마세요.
 """
 
-    # --- 4. 대화 기록 출력 구역 (이모티콘 완벽 제거 및 빈 화면으로 시작) ---
+    # --- 4. 대화 기록 출력 구역 (이모티콘 완벽 제거) ---
     if "messages" not in st.session_state:
         st.session_state["messages"] = []
 
@@ -188,7 +182,6 @@ if check_password():
             if msg["type"] == "text":
                 st.markdown(msg["content"])
             elif msg["type"] == "code":
-                # monospace 스타일 코드 블록 (tabs 보존)
                 st.code(msg["content"], language="text")
             elif msg["type"] == "image":
                 st.image(msg["content"], caption="업로드된 캡처본", width=400)
