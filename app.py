@@ -8,7 +8,7 @@ def check_password():
         st.session_state["password_entered"] = False
 
     if not st.session_state["password_entered"]:
-        st.text_input("비밀번호를 입력하세요", type="password", key="pwd")
+        st.text_input("팀 전용 접속 비밀번호를 입력하세요", type="password", key="pwd")
         if st.session_state["pwd"] == st.secrets["APP_PASSWORD"]:
             st.session_state["password_entered"] = True
             st.rerun()
@@ -18,17 +18,16 @@ def check_password():
     return True
 
 if check_password():
-    # --- 2. 메인 타이틀 및 고정 인사말 ---
+    # --- 2. 메인 타이틀 ---
     st.title("📺 파일 인수증 생성기")
-    st.write("안녕하세요! 파일 인수증 추출 봇입니다. 아래 창을 통해 이미지를 올려주세요.")
     
-    # --- 3. 신규 프로그램 개별 입력 폼 (인사말 바로 아래 배치) ---
+    # --- 3. 신규 프로그램 개별 입력 폼 ---
     if "custom_codes" not in st.session_state:
         st.session_state["custom_codes"] = {}
 
     with st.container(border=True):
         st.markdown("#### ⚙️ 신규 프로그램 추가")
-        st.write("기존 코드표에 없는 새 프로그램을 등록합니다.")
+        st.write("기존 코드표에 없는 새 프로그램을 임시로 등록합니다.")
         with st.form("new_program_form", clear_on_submit=True):
             col1, col2 = st.columns(2)
             with col1:
@@ -119,31 +118,37 @@ if check_password():
             elif msg["type"] == "image":
                 st.image(msg["content"], caption="업로드된 이미지", width=400)
 
-    # 이미지 분석 및 결과 출력 함수
-    def process_and_reply(img):
-        st.session_state["messages"].append({"role": "user", "type": "image", "content": img})
-        try:
-            response = model.generate_content([get_prompt(), img])
-            st.session_state["messages"].append({"role": "assistant", "type": "code", "content": response.text})
-        except Exception as e:
-            st.session_state["messages"].append({"role": "assistant", "type": "text", "content": f"오류가 발생했습니다: {e}"})
+    # --- 5. 스마트 채팅창 (이미지 붙여넣기 및 엔터 실행 완벽 지원) ---
+    prompt_input = st.chat_input("궁금한점을 타이핑하고 엔터를 누르세요", accept_file=True, file_type=["png", "jpg", "jpeg"])
 
-    st.markdown("---")
-
-    # --- 5. 텍스트 채팅창 (업로더 위에 배치) ---
-    with st.form("chat_input_form", clear_on_submit=True):
-        user_chat = st.text_input("💬 채팅을 입력하세요...", placeholder="궁금한 점을 타이핑하고 엔터를 누르세요.")
-        chat_submitted = st.form_submit_button("전송")
-        
-    if chat_submitted and user_chat:
-        st.session_state["messages"].append({"role": "user", "type": "text", "content": user_chat})
-        st.session_state["messages"].append({"role": "assistant", "type": "text", "content": "채팅을 확인했습니다! 영상 목록이 포함된 이미지를 아래 파일 업로더를 통해 올려주시면 표를 추출해 드리겠습니다."})
-        st.rerun()
-
-    # --- 6. 이미지 업로더 구역 (채팅창 아래에 배치) ---
-    uploaded_file = st.file_uploader("📂 찾아보기 / 드래그 앤 드롭 / 클릭 후 붙여넣기(Ctrl+V)", type=["png", "jpg", "jpeg"])
-    if uploaded_file and st.button("✨ 이 이미지로 파일 인수증 추출하기", use_container_width=True):
-        with st.spinner('제미나이가 데이터를 분석하고 있습니다...'):
-            img = Image.open(uploaded_file)
-            process_and_reply(img)
+    if prompt_input:
+        if isinstance(prompt_input, str):
+            # Streamlit 구버전 예외 처리
+            st.session_state["messages"].append({"role": "user", "type": "text", "content": prompt_input})
+            st.session_state["messages"].append({"role": "assistant", "type": "text", "content": "현재 앱 구동 환경이 이미지 붙여넣기를 지원하지 않습니다. 스트림릿 서버를 재부팅(Reboot) 해주세요."})
+            st.rerun()
+        else:
+            user_text = prompt_input.text
+            user_files = prompt_input.files
+            
+            # 텍스트가 있다면 출력
+            if user_text:
+                st.session_state["messages"].append({"role": "user", "type": "text", "content": user_text})
+                
+            # 이미지 첨부(붙여넣기)가 감지되었을 때 메인 프로세스 실행
+            if user_files:
+                img = Image.open(user_files[0])
+                st.session_state["messages"].append({"role": "user", "type": "image", "content": img})
+                
+                with st.spinner('제미나이가 데이터를 분석하고 있습니다...'):
+                    try:
+                        response = model.generate_content([get_prompt(), img])
+                        st.session_state["messages"].append({"role": "assistant", "type": "code", "content": response.text})
+                    except Exception as e:
+                        st.session_state["messages"].append({"role": "assistant", "type": "text", "content": f"오류가 발생했습니다: {e}"})
+            else:
+                # 텍스트만 치고 이미지를 안 올렸을 때의 안내문
+                if user_text:
+                    st.session_state["messages"].append({"role": "assistant", "type": "text", "content": "이미지가 확인되지 않았습니다. 추출하시려는 캡처본을 채팅창에 붙여넣기(Ctrl+V) 하거나 왼쪽 아이콘으로 첨부한 뒤 엔터를 눌러주세요."})
+            
             st.rerun()
