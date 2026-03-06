@@ -63,7 +63,7 @@ def check_password():
 
 if check_password():
     # --- 2. 메인 타이틀 (사내 포털 컬러 적용) ---
-    st.markdown("<h1 style='color: #684CDB; font-weight: 700;'>📺 MBC NET 파일 인수증 생성기</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='color: #684CDB; font-weight: 700;'>MBCNET 파일 인수증 생성기</h1>", unsafe_allow_html=True)
     
     # --- 3. 신규 프로그램 개별 입력 폼 ---
     if "custom_codes" not in st.session_state:
@@ -193,4 +193,5 @@ if check_password():
                     st.session_state["messages"].append({"role": "assistant", "type": "text", "content": "이미지가 확인되지 않았습니다. 파일 첨부 아이콘을 눌러 이미지를 올려주세요."})
             
             st.rerun()
+
 
